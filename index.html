@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <title>RC Controller</title>
+  <style>
+    *{
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    h1{
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .controller{
+      display: flex;
+      width: 100%;
+      margin: auto;
+      max-width: 800px;
+      padding: 10px;
+    }
+    .asseleration, .steering{
+      flex: 1;
+      height: 200px;
+      text-align: center;
+      border: 1px solid black;
+    }
+    .asseleration > div {
+      transform: translateY(71px) rotate(-90deg);
+    }
+    .steering > div{
+      height: 164px;
+      display: flex;
+      justify-content: center;
+    }
+    .steering > input{
+      align-items: center;
+    }
+    
+  </style>
+</head>
+<body>
+  <h1>RC Controller</h1>
+  <form>
+    <div>
+      <label for="wslink">Link WS</label>
+      <input type="text" placeholder="input ESP WS link . . ." id="wslink">
+    </div>
+    <div class="controller">
+      <div class="asseleration">
+        <label for="speed">Speed</label>
+        <div>
+          <Input id="speed" type="range" min="0" max="100" ></Input>
+        </div>
+      </div>
+      <div class="steering">
+        <label for="steer">Steer</label>
+        <div>
+          <Input id="steer" type="range" min="0" max="100" ></Input>
+        </div>
+      </div>
+      <div class="light">
+        <button id="lightToggle">OFF</button>
+      </div>
+    </div>
+    
+  </form>
+
+  <script>
+    const speed = document.getElementById('speed')
+    const steer = document.getElementById("steer")
+    const wslink = document.getElementById("wslink")
+    const lightToogle = document.getElementById("lightToggle")
+  
+    const gateway = `ws://192.168.1.2/ws`;
+    let websocket;
+
+    const machine = {
+      speed : 0,
+      steer:50,
+      light:false
+    }
+    speed.value = machine.speed;
+    steer.value = machine.steer
+
+    window.addEventListener("load", onLoad)
+
+    function handleSpeed (e){
+      e.preventDefault();
+      machine.speed = e.target.value;
+      websocket.send(machine.speed);
+      console.log("speed", machine)
+    }
+    function handleSteer (e){
+      e.preventDefault();
+      machine.steer = e.target.value
+      websocket.send(machine.steer);
+      console.log("steer",machine)
+    }
+
+    function handleLight (e){
+      e.preventDefault();
+      machine.light = !machine.light;
+      if(machine.light){
+        lightToogle.innerText = "ON";
+      }else{
+        lightToogle.innerText = "OFF";
+      }
+      websocket.send("toggle")
+    }
+
+    speed.addEventListener('input', handleSpeed)
+    steer.addEventListener("input", handleSteer)
+    lightToogle.addEventListener("click", handleLight)
+    document.addEventListener("mouseup", (e)=>{
+      document.removeEventListener("input", handleSpeed);
+      document.removeEventListener("input", handleSteer);
+      document.removeEventListener("input", handleLight)
+      machine.steer = 50;
+      steer.value = machine.steer;
+      websocket.send(machine.steer);
+      console.log('mouseUp', machine)
+    })
+
+    function initWebSocket() {
+      console.log('Trying to open a WebSocket connection...');
+      websocket = new WebSocket(gateway);
+      websocket.onopen    = onOpen;
+      websocket.onclose   = onClose;
+      websocket.onmessage = onMessage;
+    }
+    function onOpen(event) {
+      console.log('Connection opened');
+    }
+  function onClose(event) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+  }
+  function onLoad(event) {
+    initWebSocket();
+  }
+  </script>
+  
+</body>
+</html>
