@@ -45,10 +45,6 @@
 <body>
   <h1>RC Controller</h1>
   <form>
-    <div>
-      <label for="wslink">Link WS</label>
-      <input type="text" placeholder="input ESP WS link . . ." id="wslink">
-    </div>
     <div class="controller">
       <div class="asseleration">
         <label for="speed">Speed</label>
@@ -72,9 +68,7 @@
   <script>
     const speed = document.getElementById('speed')
     const steer = document.getElementById("steer")
-    const wslink = document.getElementById("wslink")
     const lightToogle = document.getElementById("lightToggle")
-  
     const gateway = `ws://192.168.1.2/ws`;
     let websocket;
 
@@ -91,14 +85,12 @@
     function handleSpeed (e){
       e.preventDefault();
       machine.speed = e.target.value;
-      websocket.send(machine.speed);
-      console.log("speed", machine)
+      websocket.send(`speed&${machine.speed}`);
     }
     function handleSteer (e){
       e.preventDefault();
       machine.steer = e.target.value
-      websocket.send(machine.steer);
-      console.log("steer",machine)
+      websocket.send(`steer&${machine.steer}`);
     }
 
     function handleLight (e){
@@ -115,14 +107,9 @@
     speed.addEventListener('input', handleSpeed)
     steer.addEventListener("input", handleSteer)
     lightToogle.addEventListener("click", handleLight)
-    document.addEventListener("mouseup", (e)=>{
-      document.removeEventListener("input", handleSpeed);
-      document.removeEventListener("input", handleSteer);
-      document.removeEventListener("input", handleLight)
-      machine.steer = 50;
+    steer.addEventListener("mouseup", (e)=>{
       steer.value = machine.steer;
-      websocket.send(machine.steer);
-      console.log('mouseUp', machine)
+      websocket.send("reset&50")
     })
 
     function initWebSocket() {
@@ -130,7 +117,6 @@
       websocket = new WebSocket(gateway);
       websocket.onopen    = onOpen;
       websocket.onclose   = onClose;
-      websocket.onmessage = onMessage;
     }
     function onOpen(event) {
       console.log('Connection opened');
