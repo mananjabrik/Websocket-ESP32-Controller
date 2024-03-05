@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <Servo.h>
 
 // Replace with your network credentials
 const char *ssid = "@wifiRoot";
@@ -13,14 +14,17 @@ String message = "";
 String status = "";
 String value = "";
 
+int servoPin = 13;
 int outMotorCW = 27;
 int outMotorCCW = 14;
 int pwmCW = 0;
 int pwmCCW = 0;
+int rotation = 0;
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
+Servo servo1;
 
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
@@ -76,6 +80,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
     if (status == "steer")
     {
+      int maxDeg = 180;
+      rotation = maxDeg * value / 100;
       Serial.print("change dir ");
       Serial.println(value);
     }
@@ -140,6 +146,7 @@ void setup()
   digitalWrite(ledPin, LOW);
   pinMode(outMotorCW, OUTPUT);
   pinMode(outMotorCCW, OUTPUT);
+  servo1.attach(servoPin);
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -166,6 +173,7 @@ void loop()
 {
   ws.cleanupClients();
   digitalWrite(ledPin, ledState);
-  digitalWrite(outMotorCW, pwmCW);
-  digitalWrite(outMotorCCW, LOW);
+  analogWrite(outMotorCW, pwmCW);
+  analogWrite(outMotorCCW, LOW);
+  servo1.write(rotation);
 }
