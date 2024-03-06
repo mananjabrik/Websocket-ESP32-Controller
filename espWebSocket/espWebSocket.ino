@@ -2,7 +2,7 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
 
 // Replace with your network credentials
 const char *ssid = "@wifiRoot";
@@ -15,8 +15,9 @@ String status = "";
 String value = "";
 
 int servoPin = 13;
-int outMotorCW = 27;
-int outMotorCCW = 14;
+int motorPwm = 27;
+int motorA1 = 14;
+int motorA2 = 12;
 int pwmCW = 0;
 int pwmCCW = 0;
 int rotation = 0;
@@ -80,10 +81,11 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
     if (status == "steer")
     {
-      int maxDeg = 180;
-      rotation = maxDeg * value / 100;
+      int intValue = value.toInt();
+      int maxServo = 180;
+      rotation = maxServo * intValue / 100;
       Serial.print("change dir ");
-      Serial.println(value);
+      Serial.println(rotation);
     }
 
     if (status == "toggle")
@@ -144,8 +146,9 @@ void setup()
 
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
-  pinMode(outMotorCW, OUTPUT);
-  pinMode(outMotorCCW, OUTPUT);
+  pinMode(motorA1, OUTPUT);
+  pinMode(motorA2, OUTPUT);
+  pinMode(motorPwm, OUTPUT);
   servo1.attach(servoPin);
 
   // Connect to Wi-Fi
@@ -173,7 +176,8 @@ void loop()
 {
   ws.cleanupClients();
   digitalWrite(ledPin, ledState);
-  analogWrite(outMotorCW, pwmCW);
-  analogWrite(outMotorCCW, LOW);
+  digitalWrite(motorA1, HIGH);
+  digitalWrite(motorA2, LOW);
+  analogWrite(motorPwm, pwmCW);
   servo1.write(rotation);
 }

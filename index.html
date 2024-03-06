@@ -109,7 +109,7 @@
     lightToogle.addEventListener("click", handleLight)
     steer.addEventListener("mouseup", (e)=>{
       steer.value = machine.steer;
-      websocket.send("reset&50")
+      websocket.send("steer&50")
     })
 
     function initWebSocket() {
