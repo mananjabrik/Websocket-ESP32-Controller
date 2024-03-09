@@ -39,6 +39,37 @@
     .steering > input{
       align-items: center;
     }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      background: #053a5f;
+      height: 3rem;
+      width: 6rem;
+      border-radius: 30px;
+    }
+    input[type="range"]::-moz-range-track {
+      background: #053a5f;
+      height: 3rem;
+      border-radius: 30px;
+      width: 6rem;
+    }
+    input[type="range"]::-moz-range-thumb {
+      -webkit-appearance: none; 
+      appearance: none;
+      margin-top: -2.8rem; /* Centers thumb on the track */
+      background-color: #000;
+      height: 5rem;
+      width: 5rem;
+      border-radius: 100%;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; 
+      appearance: none;
+      margin-top: -1rem; /* Centers thumb on the track */
+      background-color: #000;
+      height: 5rem;
+      width: 5rem;
+      border-radius: 100%;
+    }
     
   </style>
 </head>
@@ -107,10 +138,10 @@
     speed.addEventListener('input', handleSpeed)
     steer.addEventListener("input", handleSteer)
     lightToogle.addEventListener("click", handleLight)
-    steer.addEventListener("mouseup", (e)=>{
-      steer.value = machine.steer;
-      websocket.send("steer&50")
-    })
+    // steer.addEventListener("mouseup", (e)=>{
+    //   steer.value = machine.steer;
+    //   websocket.send("steer&50")
+    // })
 
     function initWebSocket() {
       console.log('Trying to open a WebSocket connection...');

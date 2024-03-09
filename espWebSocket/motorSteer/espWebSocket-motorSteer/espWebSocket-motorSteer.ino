@@ -2,7 +2,6 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <ESP32Servo.h>
 
 // Replace with your network credentials
 const char *ssid = "@wifiRoot";
@@ -14,18 +13,17 @@ String message = "";
 String status = "";
 String value = "";
 
-int servoPin = 13;
 int motorPwm = 27;
-int motorA1 = 14;
-int motorA2 = 12;
-int pwmCW = 0;
-int pwmCCW = 0;
-int rotation = 0;
+int motorA = 12;
+int motorBPwm = 25;
+int motorB1 = 32;
+int motorB2 = 33;
+int pwm = 0;
+int currentSteer = 0;
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-Servo servo1;
 
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
@@ -73,18 +71,30 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     {
       int intValue = value.toInt();
       int pwmMax = 255;
-      pwmCW = pwmMax * intValue / 100;
+      pwm = pwmMax * intValue / 100;
       Serial.print("Speed Increase ");
-      Serial.println(pwmCW);
+      Serial.println(pwm);
     }
 
     if (status == "steer")
     {
-      int intValue = value.toInt();
-      int maxServo = 180;
-      rotation = maxServo * intValue / 100;
-      Serial.print("change dir ");
-      Serial.println(rotation);
+      if(value.toInt() > 50 && currentSteer < 50) {
+        currentSteer = value.toInt();
+        digitalWrite(motorB1, 1);
+        digitalWrite(motorB2, 0);
+        delay(500);
+        digitalWrite(motorB1, 0);
+        Serial.print("Steer CW:");
+        Serial.println(currentSteer);
+      } else if(value.toInt() < 50 && currentSteer > 50) {
+        currentSteer = value.toInt();
+        digitalWrite(motorB1, 0);
+        digitalWrite(motorB2, 1);
+        delay(500);
+        digitalWrite(motorB2, 0);
+        Serial.print("Steer CCW:");
+        Serial.println(currentSteer);
+      }
     }
 
     if (status == "toggle")
@@ -145,10 +155,11 @@ void setup()
 
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
-  pinMode(motorA1, OUTPUT);
-  pinMode(motorA2, OUTPUT);
+  pinMode(motorA, OUTPUT);
+  pinMode(motorB1, OUTPUT);
+  pinMode(motorB2, OUTPUT);
   pinMode(motorPwm, OUTPUT);
-  servo1.attach(servoPin);
+  pinMode(motorBPwm, OUTPUT);
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -175,8 +186,12 @@ void loop()
 {
   ws.cleanupClients();
   digitalWrite(ledPin, ledState);
-  digitalWrite(motorA1, HIGH);
-  digitalWrite(motorA2, LOW);
-  analogWrite(motorPwm, pwmCW);
-  servo1.write(rotation);
+  digitalWrite(motorA, HIGH);
+  if(ledState) {
+    analogWrite(motorBPwm, 255);
+    analogWrite(motorPwm, pwm);
+  } else {
+    analogWrite(motorBPwm, 0);
+    analogWrite(motorPwm, 0);
+  }
 }
